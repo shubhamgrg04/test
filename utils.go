@@ -29,7 +29,7 @@ func font_metrics(font_family string, text string, font_size int) (float64,float
 }
 
 func MaximizeFont(params *MaximizeFontRequest) (MaximizeFontResponse, error){
-	maxFont, maxStr := maxFontWithSplitting(params.fontFamily, params.text, float64(params.boxWidth), float64(params.boxHeight))
+	maxFont, maxStr := maxFontWithSplitting(params.fontFamily, params.text, 1, float64(params.boxWidth), float64(params.boxHeight))
 	return MaximizeFontResponse{
 		text:     maxStr,
 		fontSize: maxFont,
@@ -51,15 +51,15 @@ func min(a,b int) int{
 	}
 }
 
-func maxFontWithSplitting(fontFamily string, text string, maxWidth float64, maxHeight float64) (int,string) {
+func maxFontWithSplitting(fontFamily string, text string, lines int, maxWidth float64, maxHeight float64) (int,string) {
 	maxFont := maxFontWithoutSplitting(fontFamily, text, maxWidth, maxHeight)
 	maxStr := text
 	for i,c := range text {
 		if string(c) == " " {
-			leftMax := maxFontWithoutSplitting(fontFamily, text[:i], maxWidth, maxHeight/2)
-			rightMax, rightStr  := maxFontWithSplitting(fontFamily, text[i+1:], maxWidth, maxHeight/2)
+			leftMax := maxFontWithoutSplitting(fontFamily, text[:i], maxWidth, maxHeight/float64(lines+1))
+			rightMax, rightStr  := maxFontWithSplitting(fontFamily, text[i+1:], lines+1, maxWidth, maxHeight)
 
-			if min(leftMax, rightMax) > maxFont {
+				if min(leftMax, rightMax) > maxFont {
 				maxFont = min(leftMax, rightMax)
 				maxStr = text[:i] + "\n" + rightStr
 			}
@@ -67,6 +67,7 @@ func maxFontWithSplitting(fontFamily string, text string, maxWidth float64, maxH
 	}
 	return maxFont, maxStr
 }
+
 
 func maxFontWithoutSplitting(fontFamily string, text string, maxWidth float64, maxHeight float64) int {
 	maxFontByWidth := sort.Search( FONT_MAX, func(fontSize int) bool {
